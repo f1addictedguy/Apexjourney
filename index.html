@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Journey - Motorsport Career RPG</title>
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-card: #161b22;
+            --bg-hover: #1f242c;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent-f1: #a855f7;
+            --accent-kart: #eab308;
+            --accent-money: #22c55e;
+            --accent-danger: #ef4444;
+            --accent-info: #3b82f6;
+            --border: #30363d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-title {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, var(--accent-f1), var(--accent-kart));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .loading-sub {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            letter-spacing: 0.2em;
+        }
+
+        /* Main Layout */
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: none;
+        }
+
+        .game-container.active {
+            display: block;
+        }
+
+        /* Header */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-left h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            color: var(--accent-f1);
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-pill.money {
+            border-color: var(--accent-money);
+            color: var(--accent-money);
+        }
+
+        .stat-pill.age {
+            border-color: var(--accent-info);
+            color: var(--accent-info);
+        }
+
+        .stat-pill.license {
+            border-color: var(--accent-kart);
+            color: var(--accent-kart);
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+            background: var(--bg-hover);
+        }
+
+        .nav-tab.active {
+            color: var(--accent-f1);
+            border-bottom-color: var(--accent-f1);
+        }
+
+        /* Content Panels */
+        .panel {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .card-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--accent-f1);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #9333ea;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: var(--accent-money);
+            color: var(--bg-dark);
+        }
+
+        .btn-success:hover {
+            background: #16a34a;
+        }
+
+        .btn-danger {
+            background: var(--accent-danger);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--accent-kart);
+            color: var(--bg-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Stat Bars */
+        .stat-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 15px;
+        }
+
+        .stat-label {
+            width: 150px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .stat-bar-container {
+            flex: 1;
+            height: 24px;
+            background: var(--bg-dark);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stat-bar {
+            height: 100%;
+            border-radius: 12px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .stat-bar.pace { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .stat-bar.racecraft { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+        .stat-bar.consistency { background: linear-gradient(90deg, #10b981, #34d399); }
+        .stat-bar.tyres { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .stat-bar.marketability { background: linear-gradient(90deg, #ec4899, #f472b6); }
+
+        /* Tier Display */
+        .tier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .tier-1 { background: rgba(234, 179, 8, 0.2); color: var(--accent-kart); }
+        .tier-2 { background: rgba(234, 179, 8, 0.25); color: #facc15; }
+        .tier-3 { background: rgba(234, 179, 8, 0.3); color: #fde047; }
+        .tier-4 { background: rgba(34, 197, 94, 0.2); color: var(--accent-money); }
+        .tier-5 { background: rgba(59, 130, 246, 0.2); color: var(--accent-info); }
+        .tier-6 { background: rgba(59, 130, 246, 0.3); color: #60a5fa; }
+        .tier-7 { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
+        .tier-8 { background: rgba(168, 85, 247, 0.3); color: #d8b4fe; }
+        .tier-9 { background: rgba(168, 85, 247, 0.4); color: var(--accent-f1); border: 1px solid var(--accent-f1); }
+
+        /* Team Cards */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .team-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .team-card:hover {
+            border-color: var(--accent-f1);
+            transform: translateY(-2px);
+        }
+
+        .team-card.selected {
+            border-color: var(--accent-f1);
+            background: rgba(168, 85, 247, 0.1);
+        }
+
+        .team-card.locked {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .team-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .team-performance {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .performance-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .performance-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .team-cost {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--accent-money);
+            margin: 10px 0;
+        }
+
+        /* Race Screen */
+        .race-screen {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            min-height: 500px;
+        }
+
+        .timing-tower {
+            font-family: 'Courier New', monospace;
+            background: rgba(0,0,0,0.5);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .timing-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 80px 100px;
+            gap: 10px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+        }
+
+        .timing-row.player {
+            background: rgba(168, 85, 247, 0.2);
+            margin: 0 -15px;
+            padding: 6px 15px;
+            font-weight: 700;
+        }
+
+        .position-num {
+            color: var(--accent-kart);
+            font-weight: 700;
+        }
+
+        .gap-time {
+            color: var(--text-secondary);
+            text-align: right;
+        }
+
+        .lap-counter {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: var(--accent-f1);
+        }
+
+        .race-log {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            min-height: 120px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .race-log .log-entry {
+            margin-bottom: 8px;
+            padding-left: 15px;
+            border-left: 3px solid var(--accent-f1);
+        }
+
+        .decision-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--accent-danger);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .decision-title {
+            font-weight: 700;
+            color: var(--accent-danger);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .decision-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        /* Setup Screen */
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .setup-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .setup-card:hover {
+            border-color: var(--accent-info);
+        }
+
+        .setup-card.selected {
+            border-color: var(--accent-info);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .setup-card h3 {
+            margin-bottom: 8px;
+            color: var(--accent-info);
+        }
+
+        .setup-points {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .point-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--bg-dark);
+            border: 2px solid var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .point-dot.active {
+            background: var(--accent-info);
+            border-color: var(--accent-info);
+        }
+
+        /* Championship Table */
+        .champ-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .champ-table th,
+        .champ-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .champ-table th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .champ-table tr.player-row {
+            background: rgba(168, 85, 247, 0.1);
+            font-weight: 700;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        .modal-text {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        /* Start Screen */
+        .start-screen {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .start-screen h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--accent-f1), var(--accent-kart));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .start-screen p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+
+        .name-input {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .name-input:focus {
+            outline: none;
+            border-color: var(--accent-f1);
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--accent-f1);
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 600;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            max-width: 350px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-title {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .notification-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Progress Ring */
+        .progress-ring {
+            width: 60px;
+            height: 60px;
+        }
+
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 4;
+        }
+
+        .progress-ring .bg {
+            stroke: var(--bg-dark);
+        }
+
+        .progress-ring .progress {
+            stroke: var(--accent-f1);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .game-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .header-stats {
+                width: 100%;
+            }
+            
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .timing-row {
+                grid-template-columns: 30px 1fr 60px 80px;
+                font-size: 0.8rem;
+            }
+            
+            .start-screen h1 {
+                font-size: 2.5rem;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Animations */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.4s ease;
+        }
+
+        .season-end-banner {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(234, 179, 8, 0.2));
+            border: 2px solid var(--accent-f1);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .season-end-banner h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .super-license-tracker {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .license-bar {
+            flex: 1;
+            height: 30px;
+            background: var(--bg-dark);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .license-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-kart), var(--accent-f1));
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .academy-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid var(--accent-f1);
+            border-radius: 20px;
+            color: var(--accent-f1);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .sponsor-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: var(--bg-dark);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .sponsor-name {
+            font-weight: 600;
+        }
+
+        .sponsor-value {
+            color: var(--accent-money);
+            font-weight: 700;
+        }
+
+        .event-calendar {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .event-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .event-card.completed {
+            border-color: var(--accent-money);
+            opacity: 0.7;
+        }
+
+        .event-card.current {
+            border-color: var(--accent-f1);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+        }
+
+        .event-card.upcoming {
+            opacity: 0.6;
+        }
+
+        .event-round {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .event-name {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .event-status {
+            font-size: 0.85rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .status-done { background: rgba(34, 197, 94, 0.2); color: var(--accent-money); }
+        .status-live { background: rgba(168, 85, 247, 0.2); color: var(--accent-f1); }
+        .status-pending { background: var(--bg-dark); color: var(--text-secondary); }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .result-cell {
+            background: var(--bg-dark);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .result-value {
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .result-value.positive { color: var(--accent-money); }
+        .result-value.negative { color: var(--accent-danger); }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-title">APEX JOURNEY</div>
+        <div class="loading-sub">Initializing Telemetry Systems...</div>
+    </div>
+
+    <!-- Start Screen -->
+    <div class="game-container" id="startScreen">
+        <div class="start-screen">
+            <h1>APEX JOURNEY</h1>
+            <p>From Karting Kid to Formula 1 Champion</p>
+            <div style="margin-bottom: 30px;">
+                <input type="text" class="name-input" id="driverName" placeholder="Enter Your Driver Name" maxlength="20">
+            </div>
+            <button class="btn btn-primary" style="font-size: 1.2rem; padding: 15px 40px;" onclick="startGame()">
+                START CAREER
+            </button>
+            <div style="margin-top: 30px; color: var(--text-secondary); font-size: 0.9rem;">
+                <p>Career saved automatically to browser storage</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game -->
+    <div class="game-container" id="mainGame">
+        <div class="game-header">
+            <div class="header-left">
+                <h1 id="headerName">DRIVER</h1>
+                <div style="margin-top: 5px;">
+                    <span class="tier-badge" id="headerTier">Tier 1 - Cadets</span>
+                    <span style="margin-left: 10px; color: var(--text-secondary);" id="headerSeries">Mini Karting</span>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-pill money">
+                    <span>$</span>
+                    <span id="headerCash">25,000</span>
+                </div>
+                <div class="stat-pill age">
+                    <span>Age:</span>
+                    <span id="headerAge">8</span>
+                </div>
+                <div class="stat-pill license">
+                    <span>SL Points:</span>
+                    <span id="headerSL">0/40</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('dashboard')">HQ Dashboard</button>
+            <button class="nav-tab" onclick="switchTab('paddock')">The Paddock</button>
+            <button class="nav-tab" onclick="switchTab('race')">Race Weekend</button>
+            <button class="nav-tab" onclick="switchTab('championship')">Championship</button>
+            <button class="nav-tab" onclick="switchTab('offseason')">Off-Season</button>
+        </div>
+
+        <!-- Dashboard Panel -->
+        <div class="panel active" id="panel-dashboard">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Driver Attributes</div>
+                        <div class="card-subtitle">Current skill levels (1-99 scale)</div>
+                    </div>
+                    <div class="academy-badge" id="academyBadge" style="display: none;">
+                        🏛️ <span id="academyName">Ferrari Driver Academy</span>
+                    </div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">One-Lap Pace</div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar pace" id="statPace" style="width: 15%">15</div>
+                    </div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Racecraft</div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar racecraft" id="statRacecraft" style="width: 12%">12</div>
+                    </div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Consistency</div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar consistency" id="statConsistency" style="width: 10%">10</div>
+                    </div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Tyre Management</div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar tyres" id="statTyres" style="width: 8%">8</div>
+                    </div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Marketability</div>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar marketability" id="statMarketability" style="width: 10%">10</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Current Season</div>
+                    <div class="card-subtitle" id="seasonInfo">Season 1 - 8 Rounds</div>
+                </div>
+                <div class="event-calendar" id="eventCalendar"></div>
+            </div>
+
+            <div class="card" id="sponsorsPanel" style="display: none;">
+                <div class="card-header">
+                    <div class="card-title">Active Sponsors</div>
+                </div>
+                <div id="sponsorsList"></div>
+            </div>
+        </div>
+
+        <!-- Paddock Panel -->
+        <div class="panel" id="panel-paddock">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Team Market</div>
+                        <div class="card-subtitle">Available seats for next season</div>
+                    </div>
+                </div>
+                <div class="team-grid" id="teamMarket"></div>
+            </div>
+        </div>
+
+        <!-- Race Panel -->
+        <div class="panel" id="panel-race">
+            <div id="racePreparation">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Practice & Setup</div>
+                            <div class="card-subtitle">Allocate 3 Focus Points to optimize your car</div>
+                        </div>
+                        <div class="stat-pill" style="border-color: var(--accent-info); color: var(--accent-info);">
+                            Points: <span id="focusPoints">3</span>/3
+                        </div>
+                    </div>
+                    <div class="setup-grid" id="setupOptions"></div>
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="confirmSetup()" id="confirmSetupBtn">
+                        Confirm Setup & Start Qualifying
+                    </button>
+                </div>
+            </div>
+
+            <div id="raceSimulation" style="display: none;">
+                <div class="race-screen">
+                    <div class="lap-counter" id="lapCounter">LAP 1 / 15</div>
+                    
+                    <div class="timing-tower" id="timingTower"></div>
+                    
+                    <div class="race-log" id="raceLog"></div>
+                    
+                    <div class="decision-box" id="decisionBox" style="display: none;">
+                        <div class="decision-title" id="decisionTitle">Critical Decision</div>
+                        <div id="decisionText"></div>
+                        <div class="decision-options" id="decisionOptions"></div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: center;" id="raceControls">
+                        <button class="btn btn-primary" onclick="nextRacePhase()">Continue</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="raceResults" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Race Results</div>
+                    </div>
+                    <div class="results-grid" id="resultsGrid"></div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn btn-success" onclick="finishRace()">Return to Dashboard</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Championship Panel -->
+        <div class="panel" id="panel-championship">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Championship Standings</div>
+                    <div class="card-subtitle" id="champSubtitle">Season 1</div>
+                </div>
+                <table class="champ-table" id="champTable">
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th>Driver</th>
+                            <th>Team</th>
+                            <th>Points</th>
+                            <th>Wins</th>
+                        </tr>
+                    </thead>
+                    <tbody id="champBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Off-Season Panel -->
+        <div class="panel" id="panel-offseason">
+            <div id="offseasonContent">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Off-Season Actions</div>
+                        <div class="card-subtitle">Manage your career between seasons</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                        <button class="btn btn-outline" onclick="advanceAge()">
+                            <div style="font-size: 1.1rem; font-weight: 700;">Advance Age</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Current: <span id="offseasonAge">8</span></div>
+                        </button>
+                        <button class="btn btn-outline" onclick="manageSponsors()">
+                            <div style="font-size: 1.1rem; font-weight: 700;">Sponsor Negotiations</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Renew or find new backers</div>
+                        </button>
+                        <button class="btn btn-outline" onclick="checkAcademy()">
+                            <div style="font-size: 1.1rem; font-weight: 700;">Academy Offers</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px;">Check for F1 junior programs</div>
+                        </button>
+                        <button class="btn btn-primary" onclick="startNewSeason()">
+                            <div style="font-size: 1.1rem; font-weight: 700;">Start New Season</div>
+                            <div style="font-size: 0.85rem; margin-top: 5px;">Begin the next campaign</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card" id="superLicenseCard">
+                    <div class="card-header">
+                        <div class="card-title">Super License Tracker</div>
+                        <div class="card-subtitle">40 points required for F1 (rolling 3-year window)</div>
+                    </div>
+                    <div class="super-license-tracker">
+                        <div style="min-width: 80px;">
+                            <div style="font-size: 2rem; font-weight: 800; color: var(--accent-f1);" id="slTotal">0</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">Points</div>
+                        </div>
+                        <div class="license-bar">
+                            <div class="license-fill" id="slBar" style="width: 0%">0 / 40</div>
+                        </div>
+                    </div>
+                    <div id="slHistory" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <div class="modal-title" id="modalTitle">Title</div>
+            <div class="modal-text" id="modalText">Content</div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;" id="modalActions">
+                <button class="btn btn-outline" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <div class="notification-title" id="notifTitle">Title</div>
+        <div class="notification-text" id="notifText">Message</div>
+    </div>
+
+    <script>
+        // ==================== GAME DATA ====================
+        const TIERS = [
+            { name: "Cadets / Mini Karting", minAge: 8, maxAge: 12, cost: 5000, rounds: 6, carPerf: 50, color: "tier-1" },
+            { name: "Junior Karting (Rotax/IAME)", minAge: 12, maxAge: 15, cost: 15000, rounds: 8, carPerf: 55, color: "tier-2" },
+            { name: "Senior Karting (KZ Shifter)", minAge: 15, maxAge: 18, cost: 35000, rounds: 10, carPerf: 60, color: "tier-3" },
+            { name: "Sub-F4 / Feeders", minAge: 14, maxAge: 16, cost: 95000, rounds: 8, carPerf: 65, color: "tier-4" },
+            { name: "Formula 4", minAge: 15, maxAge: 99, cost: 180000, rounds: 8, carPerf: 70, color: "tier-5" },
+            { name: "Formula Regional", minAge: 16, maxAge: 99, cost: 350000, rounds: 10, carPerf: 75, color: "tier-6" },
+            { name: "Formula 3", minAge: 16, maxAge: 99, cost: 600000, rounds: 10, carPerf: 80, color: "tier-7" },
+            { name: "Formula 2", minAge: 17, maxAge: 99, cost: 1200000, rounds: 12, carPerf: 85, color: "tier-8" },
+            { name: "Formula 1", minAge: 18, maxAge: 99, cost: 0, rounds: 24, carPerf: 95, color: "tier-9" }
+        ];
+
+        const TEAMS = [
+            // Tier 1
+            [
+                { name: "Local Kart Club", perf: 45, cost: 3000, prestige: 0 },
+                { name: "Speedy Kids Academy", perf: 52, cost: 5000, prestige: 10 },
+                { name: "Champion Karts", perf: 58, cost: 8000, prestige: 25 }
+            ],
+            // Tier 2
+            [
+                { name: "Regional Karting", perf: 50, cost: 10000, prestige: 0 },
+                { name: "Rotax Junior Team", perf: 58, cost: 15000, prestige: 15 },
+                { name: "IAME Elite Squad", perf: 65, cost: 22000, prestige: 30 }
+            ],
+            // Tier 3
+            [
+                { name: "National Karting", perf: 55, cost: 25000, prestige: 0 },
+                { name: "European KZ Team", perf: 65, cost: 35000, prestige: 20 },
+                { name: "CRG Factory", perf: 72, cost: 50000, prestige: 40 }
+            ],
+            // Tier 4
+            [
+                { name: "Ginetta Juniors", perf: 60, cost: 75000, prestige: 0 },
+                { name: "Skip Barber School", perf: 70, cost: 95000, prestige: 20 },
+                { name: "F4 Prep Academy", perf: 78, cost: 130000, prestige: 45 }
+            ],
+            // Tier 5
+            [
+                { name: "Backmarker Racing", perf: 65, cost: 95000, prestige: 0 },
+                { name: "Midfield Motorsport", perf: 75, cost: 140000, prestige: 25 },
+                { name: "Apex Motorsport", perf: 85, cost: 180000, prestige: 50 },
+                { name: "Prema Junior", perf: 88, cost: 220000, prestige: 60 }
+            ],
+            // Tier 6
+            [
+                { name: "Regional Backmarker", perf: 70, cost: 200000, prestige: 0 },
+                { name: "GB3 Midfield", perf: 80, cost: 280000, prestige: 30 },
+                { name: "FREC Elite", perf: 88, cost: 350000, prestige: 55 },
+                { name: "ART Regional", perf: 90, cost: 420000, prestige: 65 }
+            ],
+            // Tier 7
+            [
+                { name: "F3 Backmarker", perf: 75, cost: 400000, prestige: 0 },
+                { name: "Campos Racing", perf: 85, cost: 550000, prestige: 35 },
+                { name: "Prema F3", perf: 92, cost: 700000, prestige: 60 },
+                { name: "Trident F3", perf: 94, cost: 800000, prestige: 70 }
+            ],
+            // Tier 8
+            [
+                { name: "F2 Backmarker", perf: 80, cost: 800000, prestige: 0 },
+                { name: "MP Motorsport", perf: 90, cost: 1000000, prestige: 40 },
+                { name: "ART Grand Prix", perf: 96, cost: 1200000, prestige: 65 },
+                { name: "Prema F2", perf: 98, cost: 1400000, prestige: 75 }
+            ],
+            // Tier 9
+            [
+                { name: "Haas F1", perf: 85, cost: 0, prestige: 20, salary: 500000 },
+                { name: "Williams Racing", perf: 90, cost: 0, prestige: 40, salary: 1000000 },
+                { name: "Aston Martin", perf: 95, cost: 0, prestige: 60, salary: 3000000 },
+                { name: "Mercedes-AMG", perf: 99, cost: 0, prestige: 80, salary: 10000000 },
+                { name: "Red Bull Racing", perf: 99, cost: 0, prestige: 85, salary: 15000000 }
+            ]
+        ];
+
+        const ACADEMIES = [
+            { name: "Red Bull Junior Team", minTier: 4, minPace: 60, minMarket: 50 },
+            { name: "Ferrari Driver Academy", minTier: 4, minPace: 65, minMarket: 55 },
+            { name: "Mercedes Junior", minTier: 5, minPace: 70, minMarket: 60 },
+            { name: "Alpine Academy", minTier: 4, minPace: 60, minMarket: 45 },
+            { name: "McLaren Young Drivers", minTier: 5, minPace: 68, minMarket: 55 },
+            { name: "Aston Martin Junior", minTier: 5, minPace: 65, minMarket: 50 }
+        ];
+
+        const SETUP_OPTIONS = [
+            { name: "Aero Balance", desc: "Optimize downforce for qualifying pace", stat: "pace", value: 5 },
+            { name: "Mechanical Grip", desc: "Improve race pace and consistency", stat: "consistency", value: 5 },
+            { name: "Qualifying Trim", desc: "Maximize one-lap performance", stat: "pace", value: 8 },
+            { name: "Race Setup", desc: "Balance for tyre management", stat: "tyres", value: 6 },
+            { name: "Overtake Mode", desc: "Aggressive setup for passing", stat: "racecraft", value: 6 },
+            { name: "Defensive", desc: "Stable setup to hold positions", stat: "consistency", value: 7 }
+        ];
+
+        const TRACK_NAMES = [
+            "Silverstone", "Monza", "Spa-Francorchamps", "Monaco", "Suzuka",
+            "COTA", "Red Bull Ring", "Hungaroring", "Zandvoort", "Interlagos",
+            "Baku", "Singapore", "Jeddah", "Las Vegas", "Imola", "Barcelona",
+            "Paul Ricard", "Nurburgring", "Hockenheim", "Fuji", "Sepang"
+        ];
+
+        const AI_NAMES = [
+            "Max Verstappen", "Lewis Hamilton", "Charles Leclerc", "Lando Norris",
+            "George Russell", "Oscar Piastri", "Carlos Sainz", "Fernando Alonso",
+            "Sergio Perez", "Valtteri Bottas", "Esteban Ocon", "Pierre Gasly",
+            "Alex Albon", "Logan Sargeant", "Nico Hulkenberg", "Kevin Magnussen",
+            "Daniel Ricciardo", "Yuki Tsunoda", "Liam Lawson", "Oliver Bearman"
+        ];
+
+        // ==================== GAME STATE ====================
+        let game = {
+            started: false,
+            name: "",
+            tier: 0,
+            age: 8,
+            cash: 25000,
+            stats: { pace: 15, racecraft: 12, consistency: 10, tyres: 8, marketability: 10 },
+            team: null,
+            season: 1,
+            round: 0,
+            championship: [],
+            slPoints: [],
+            sponsors: [],
+            academy: null,
+            setup: [],
+            raceState: null,
+            history: []
+        };
+
+        // ==================== SAVE/LOAD ====================
+        function saveGame() {
+            localStorage.setItem('apexJourneySave', JSON.stringify(game));
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('apexJourneySave');
+            if (saved) {
+                game = JSON.parse(saved);
+                return true;
+            }
+            return false;
+        }
+
+        // ==================== INITIALIZATION ====================
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+                if (loadGame() && game.started) {
+                    showMainGame();
+                    updateUI();
+                } else {
+                    document.getElementById('startScreen').classList.add('active');
+                }
+            }, 1500);
+        };
+
+        function startGame() {
+            const name = document.getElementById('driverName').value.trim();
+            if (!name) {
+                showNotification("Error", "Please enter a driver name");
+                return;
+            }
+            
+            game.name = name;
+            game.started = true;
+            game.team = TEAMS[0][0];
+            initChampionship();
+            saveGame();
+            
+            document.getElementById('startScreen').classList.remove('active');
+            showMainGame();
+            updateUI();
+            showNotification("Career Started", `Welcome to Apex Journey, ${name}! Your karting career begins now.`);
+        }
+
+        function showMainGame() {
+            document.getElementById('mainGame').classList.add('active');
+        }
+
+        // ==================== UI UPDATES ====================
+        function updateUI() {
+            const tier = TIERS[game.tier];
+            
+            document.getElementById('headerName').textContent = game.name.toUpperCase();
+            document.getElementById('headerTier').textContent = `Tier ${game.tier + 1} - ${tier.name.split('/')[0]}`;
+            document.getElementById('headerTier').className = `tier-badge ${tier.color}`;
+            document.getElementById('headerSeries').textContent = tier.name;
+            document.getElementById('headerCash').textContent = formatMoney(game.cash);
+            document.getElementById('headerAge').textContent = game.age;
+            
+            const slTotal = calculateSLPoints();
+            document.getElementById('headerSL').textContent = `${slTotal}/40`;
+            
+            // Stats
+            updateStatBar('statPace', game.stats.pace);
+            updateStatBar('statRacecraft', game.stats.racecraft);
+            updateStatBar('statConsistency', game.stats.consistency);
+            updateStatBar('statTyres', game.stats.tyres);
+            updateStatBar('statMarketability', game.stats.marketability);
+            
+            // Academy
+            const academyBadge = document.getElementById('academyBadge');
+            if (game.academy) {
+                academyBadge.style.display = 'inline-flex';
+                document.getElementById('academyName').textContent = game.academy;
+            } else {
+                academyBadge.style.display = 'none';
+            }
+            
+            // Calendar
+            updateCalendar();
+            
+            // Sponsors
+            updateSponsors();
+            
+            // Paddock
+            updatePaddock();
+            
+            // Championship
+            updateChampionship();
+            
+            // Off-season
+            document.getElementById('offseasonAge').textContent = game.age;
+            updateSLTracker();
+        }
+
+        function updateStatBar(id, value) {
+            const bar = document.getElementById(id);
+            bar.style.width = `${value}%`;
+            bar.textContent = Math.round(value);
+        }
+
+        function formatMoney(amount) {
+            if (amount >= 1000000) return (amount / 1000000).toFixed(1) + 'M';
+            if (amount >= 1000) return (amount / 1000).toFixed(0) + 'K';
+            return amount.toString();
+        }
+
+        function updateCalendar() {
+            const tier = TIERS[game.tier];
+            const calendar = document.getElementById('eventCalendar');
+            calendar.innerHTML = '';
+            
+            for (let i = 0; i < tier.rounds; i++) {
+                const card = document.createElement('div');
+                card.className = 'event-card';
+                
+                if (i < game.round) {
+                    card.classList.add('completed');
+                    const result = game.history.find(h => h.season === game.season && h.round === i + 1);
+                    card.innerHTML = `
+                        <div class="event-round">Round ${i + 1}</div>
+                        <div class="event-name">${TRACK_NAMES[i % TRACK_NAMES.length]}</div>
+                        <span class="event-status status-done">P${result ? result.position : '-'}</span>
+                    `;
+                } else if (i === game.round) {
+                    card.classList.add('current');
+                    card.innerHTML = `
+                        <div class="event-round">Round ${i + 1}</div>
+                        <div class="event-name">${TRACK_NAMES[i % TRACK_NAMES.length]}</div>
+                        <span class="event-status status-live">NEXT</span>
+                    `;
+                } else {
+                    card.classList.add('upcoming');
+                    card.innerHTML = `
+                        <div class="event-round">Round ${i + 1}</div>
+                        <div class="event-name">${TRACK_NAMES[i % TRACK_NAMES.length]}</div>
+                        <span class="event-status status-pending">Pending</span>
+                    `;
+                }
+                
+                calendar.appendChild(card);
+            }
+            
+            document.getElementById('seasonInfo').textContent = `Season ${game.season} - ${tier.rounds} Rounds`;
+        }
+
+        function updateSponsors() {
+            const panel = document.getElementById('sponsorsPanel');
+            const list = document.getElementById('sponsorsList');
+            
+            if (game.sponsors.length === 0) {
+                panel.style.display = 'none';
+                return;
+            }
+            
+            panel.style.display = 'block';
+            list.innerHTML = '';
+            
+            game.sponsors.forEach(sponsor => {
+                const div = document.createElement('div');
+                div.className = 'sponsor-card';
+                div.innerHTML = `
+                    <div class="sponsor-name">${sponsor.name}</div>
+                    <div class="sponsor-value">+$${formatMoney(sponsor.value)}/season</div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function updatePaddock() {
+            const grid = document.getElementById('teamMarket');
+            grid.innerHTML = '';
+            
+            const currentTier = game.tier;
+            const teams = TEAMS[currentTier];
+            
+            teams.forEach((team, idx) => {
+                const card = document.createElement('div');
+                const canAfford = game.cash >= team.cost;
+                const meetsPrestige = true; // Simplified for now
+                
+                card.className = `team-card ${game.team && game.team.name === team.name ? 'selected' : ''} ${!canAfford ? 'locked' : ''}`;
+                
+                let perfColor = team.perf < 60 ? '#ef4444' : team.perf < 80 ? '#eab308' : '#22c55e';
+                
+                card.innerHTML = `
+                    <div class="team-name">${team.name}</div>
+                    <div class="team-performance">
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Perf:</span>
+                        <div class="performance-bar">
+                            <div class="performance-fill" style="width: ${team.perf}%; background: ${perfColor};"></div>
+                        </div>
+                        <span style="font-weight: 700; font-size: 0.9rem;">${team.perf}</span>
+                    </div>
+                    <div class="team-cost">$${formatMoney(team.cost)}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                        ${game.team && game.team.name === team.name ? '✓ Current Team' : 
+                          !canAfford ? '❌ Cannot afford' : 'Click to sign'}
+                    </div>
+                `;
+                
+                if (canAfford && meetsPrestige) {
+                    card.onclick = () => signTeam(team);
+                }
+                
+                grid.appendChild(card);
+            });
+        }
+
+        function updateChampionship() {
+            const tbody = document.getElementById('champBody');
+            tbody.innerHTML = '';
+            
+            const sorted = [...game.championship].sort((a, b) => b.points - a.points);
+            
+            sorted.forEach((driver, idx) => {
+                const row = document.createElement('tr');
+                if (driver.name === game.name) row.classList.add('player-row');
+                
+                row.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td>${driver.name}</td>
+                    <td>${driver.team}</td>
+                    <td style="font-weight: 700;">${driver.points}</td>
+                    <td>${driver.wins}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('champSubtitle').textContent = `Season ${game.season} - ${TIERS[game.tier].name}`;
+        }
+
+        function updateSLTracker() {
+            const total = calculateSLPoints();
+            const pct = Math.min((total / 40) * 100, 100);
+            
+            document.getElementById('slTotal').textContent = total;
+            document.getElementById('slBar').style.width = `${pct}%`;
+            document.getElementById('slBar').textContent = `${total} / 40`;
+            
+            const history = document.getElementById('slHistory');
+            history.innerHTML = '';
+            
+            if (game.slPoints.length === 0) {
+                history.innerHTML = '<div style="color: var(--text-secondary); text-align: center;">No Super License points earned yet. Compete in Tier 6+ series to earn points.</div>';
+                return;
+            }
+            
+            game.slPoints.slice().reverse().forEach(entry => {
+                const div = document.createElement('div');
+                div.style.cssText = 'display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);';
+                div.innerHTML = `
+                    <span>${entry.season} - ${entry.position}${getOrdinal(entry.position)} place</span>
+                    <span style="color: var(--accent-f1); font-weight: 700;">+${entry.points} pts</span>
+                `;
+                history.appendChild(div);
+            });
+        }
+
+        // ==================== NAVIGATION ====================
+        function switchTab(tab) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById(`panel-${tab}`).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tab === 'race') initRacePrep();
+        }
+
+        // ==================== CHAMPIONSHIP SYSTEM ====================
+        function initChampionship() {
+            game.championship = [];
+            const tier = TIERS[game.tier];
+            
+            // Add player
+            game.championship.push({
+                name: game.name,
+                team: game.team.name,
+                points: 0,
+                wins: 0,
+                isPlayer: true
+            });
+            
+            // Add AI drivers
+            const aiCount = Math.min(19, 8 + game.tier * 2);
+            for (let i = 0; i < aiCount; i++) {
+                const teamIdx = Math.min(Math.floor(Math.random() * TEAMS[game.tier].length), TEAMS[game.tier].length - 1);
+                const aiName = AI_NAMES[i % AI_NAMES.length] + (i >= AI_NAMES.length ? ` ${Math.floor(i/AI_NAMES.length) + 1}` : '');
+                game.championship.push({
+                    name: aiName,
+                    team: TEAMS[game.tier][teamIdx].name,
+                    points: 0,
+                    wins: 0,
+                    isPlayer: false,
+                    basePace: 40 + Math.random() * 40,
+                    consistency: 30 + Math.random() * 50
+                });
+            }
+        }
+
+        function getPointsForPosition(pos) {
+            const points = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1];
+            return pos <= 10 ? points[pos - 1] || 0 : 0;
+        }
+
+        function getSLPointsForPosition(pos, tier) {
+            if (tier < 5) return 0; // Only T6+ (index 5+) gives SL points
+            const points = [12, 10, 8, 6, 4, 3, 2, 1, 0, 0];
+            return points[pos - 1] || 0;
+        }
+
+        function calculateSLPoints() {
+            const cutoff = game.season - 3;
+            return game.slPoints
+                .filter(p => p.season > cutoff)
+                .reduce((sum, p) => sum + p.points, 0);
+        }
+
+        // ==================== TEAM MANAGEMENT ====================
+        function signTeam(team) {
+            if (game.cash < team.cost) {
+                showNotification("Insufficient Funds", `You need $${formatMoney(team.cost)} to sign with ${team.name}`);
+                return;
+            }
+            
+            game.cash -= team.cost;
+            game.team = team;
+            saveGame();
+            updateUI();
+            showNotification("Team Signed", `Welcome to ${team.name}! Car performance: ${team.perf}`);
+        }
+
+        // ==================== RACE SYSTEM ====================
+        function initRacePrep() {
+            // Reset race UI
+            document.getElementById('racePreparation').style.display = 'block';
+            document.getElementById('raceSimulation').style.display = 'none';
+            document.getElementById('raceResults').style.display = 'none';
+            
+            // Setup options
+            game.setup = [];
+            const grid = document.getElementById('setupOptions');
+            grid.innerHTML = '';
+            
+            SETUP_OPTIONS.forEach((opt, idx) => {
+                const card = document.createElement('div');
+                card.className = 'setup-card';
+                card.innerHTML = `
+                    <h3>${opt.name}</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">${opt.desc}</p>
+                    <div style="font-size: 0.85rem; color: var(--accent-info); margin-bottom: 10px;">
+                        +${opt.value} ${opt.stat}
+                    </div>
+                    <div class="setup-points" id="setup-${idx}"></div>
+                `;
+                
+                // Create 3 dots
+                const dotsContainer = card.querySelector(`#setup-${idx}`);
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'point-dot';
+                    dot.dataset.index = idx;
+                    dot.dataset.level = i;
+                    dot.onclick = (e) => toggleSetupPoint(idx, i, e.target);
+                    dotsContainer.appendChild(dot);
+                }
+                
+                card.onclick = (e) => {
+                    if (!e.target.classList.contains('point-dot')) {
+                        // Click card to add point
+                        const nextLevel = game.setup.filter(s => s === idx).length;
+                        if (nextLevel < 3 && getTotalSetupPoints() < 3) {
+                            toggleSetupPoint(idx, nextLevel, dotsContainer.children[nextLevel]);
+                        }
+                    }
+                };
+                
+                grid.appendChild(card);
+            });
+            
+            updateFocusPoints();
+        }
+
+        function getTotalSetupPoints() {
+            return game.setup.length;
+        }
+
+        function toggleSetupPoint(optIdx, level, dot) {
+            const currentCount = game.setup.filter(s => s === optIdx).length;
+            
+            if (level < currentCount) {
+                // Remove points at this level and above
+                game.setup = game.setup.filter((s, i) => {
+                    const sCount = game.setup.slice(0, i + 1).filter(x => x === optIdx).length;
+                    return !(s === optIdx && sCount > level);
+                });
+            } else if (getTotalSetupPoints() < 3) {
+                game.setup.push(optIdx);
+            }
+            
+            updateSetupUI();
+            updateFocusPoints();
+        }
+
+        function updateSetupUI() {
+            SETUP_OPTIONS.forEach((opt, idx) => {
+                const card = document.querySelectorAll('.setup-card')[idx];
+                const dots = card.querySelectorAll('.point-dot');
+                const count = game.setup.filter(s => s === idx).length;
+                
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i < count);
+                });
+                
+                card.classList.toggle('selected', count > 0);
+            });
+        }
+
+        function updateFocusPoints() {
+            document.getElementById('focusPoints').textContent = 3 - getTotalSetupPoints();
+            document.getElementById('confirmSetupBtn').disabled = getTotalSetupPoints() === 0;
+        }
+
+        function confirmSetup() {
+            if (getTotalSetupPoints() === 0) return;
+            
+            document.getElementById('racePreparation').style.display = 'none';
+            document.getElementById('raceSimulation').style.display = 'block';
+            
+            startRace();
+        }
+
+        function startRace() {
+            const tier = TIERS[game.tier];
+            const track = TRACK_NAMES[game.round % TRACK_NAMES.length];
+            
+            // Calculate setup bonuses
+            let bonuses = { pace: 0, racecraft: 0, consistency: 0, tyres: 0, marketability: 0 };
+            game.setup.forEach(idx => {
+                const opt = SETUP_OPTIONS[idx];
+                bonuses[opt.stat] += opt.value;
+            });
+            
+            // Initialize race state
+            game.raceState = {
+                lap: 1,
+                totalLaps: Math.max(5, tier.rounds * 2),
+                track: track,
+                bonuses: bonuses,
+                positions: [],
+                playerPos: 0,
+                playerGap: 0,
+                tyreWear: 0,
+                fuel: 100,
+                phase: 'start', // start, racing, decision, finished
+                decisionPending: false,
+                log: [`🏁 Welcome to ${track}! Race is underway.`]
+            };
+            
+            // Generate grid positions based on qualifying (pace + consistency + setup + team)
+            const playerQual = game.stats.pace + bonuses.pace + (game.team.perf * 0.3) + (Math.random() * 20 - 10);
+            
+            game.raceState.positions = game.championship.map((driver, idx) => {
+                if (driver.isPlayer) return { ...driver, qual: playerQual, pos: 0, gap: 0 };
+                const aiQual = (driver.basePace || 50) + (Math.random() * 30 - 15);
+                return { ...driver, qual: aiQual, pos: 0, gap: 0 };
+            });
+            
+            // Sort by qual to get grid
+            game.raceState.positions.sort((a, b) => b.qual - a.qual);
+            game.raceState.positions.forEach((p, i) => {
+                p.pos = i + 1;
+                p.startPos = i + 1;
+            });
+            
+            game.raceState.playerPos = game.raceState.positions.find(p => p.isPlayer).pos;
+            
+            updateRaceDisplay();
+            saveGame();
+        }
+
+        function updateRaceDisplay() {
+            const state = game.raceState;
+            
+            document.getElementById('lapCounter').textContent = `LAP ${state.lap} / ${state.totalLaps} - ${state.track}`;
+            
+            // Timing tower
+            const tower = document.getElementById('timingTower');
+            tower.innerHTML = '';
+            
+            state.positions.slice(0, 10).forEach((driver, idx) => {
+                const row = document.createElement('div');
+                row.className = `timing-row ${driver.isPlayer ? 'player' : ''}`;
+                
+                const gap = idx === 0 ? 'LEADER' : `+${(idx * 0.8 + Math.random() * 0.5).toFixed(3)}s`;
+                
+                row.innerHTML = `
+                    <div class="position-num">${driver.pos}</div>
+                    <div>${driver.name}</div>
+                    <div>${driver.team}</div>
+                    <div class="gap-time">${gap}</div>
+                `;
+                tower.appendChild(row);
+            });
+            
+            // Race log
+            const log = document.getElementById('raceLog');
+            log.innerHTML = '';
+            state.log.slice(-5).forEach(entry => {
+                const div = document.createElement('div');
+                div.className = 'log-entry';
+                div.textContent = entry;
+                log.appendChild(div);
+            });
+            log.scrollTop = log.scrollHeight;
+            
+            // Decision box
+            const decisionBox = document.getElementById('decisionBox');
+            if (state.decisionPending) {
+                decisionBox.style.display = 'block';
+                document.getElementById('raceControls').style.display = 'none';
+            } else {
+                decisionBox.style.display = 'none';
+                document.getElementById('raceControls').style.display = 'flex';
+            }
+        }
+
+        function nextRacePhase() {
+            const state = game.raceState;
+            
+            if (state.phase === 'finished') return;
+            
+            // Check for critical decision point
+            if (!state.decisionPending && state.lap > 1 && state.lap < state.totalLaps - 1 && Math.random() < 0.3) {
+                triggerDecision();
+                return;
+            }
+            
+            // Simulate lap
+            state.lap++;
+            
+            // Calculate player performance for this lap
+            let playerPerf = game.stats.pace + state.bonuses.pace;
+            playerPerf += (game.stats.racecraft + state.bonuses.racecraft) * 0.5;
+            playerPerf += (game.stats.consistency + state.bonuses.consistency) * 0.3;
+            playerPerf += game.team.perf * 0.4;
+            
+            // Tyre degradation from Tier 6+
+            if (game.tier >= 5) {
+                state.tyreWear += 5 + (100 - game.stats.tyres - state.bonuses.tyres) * 0.05;
+                if (state.tyreWear > 50) playerPerf -= (state.tyreWear - 50) * 0.5;
+            }
+            
+            // Random variance
+            playerPerf += Math.random() * 20 - 10;
+            
+            // Simulate AI
+            state.positions.forEach(driver => {
+                if (!driver.isPlayer) {
+                    let aiPerf = (driver.basePace || 50) + (Math.random() * 25 - 12.5);
+                    aiPerf += (driver.consistency || 40) * 0.3;
+                    driver.lapPerf = aiPerf;
+                } else {
+                    driver.lapPerf = playerPerf;
+                }
+            });
+            
+            // Sort by performance this lap
+            state.positions.sort((a, b) => b.lapPerf - a.lapPerf);
+            state.positions.forEach((p, i) => p.pos = i + 1);
+            
+            state.playerPos = state.positions.find(p => p.isPlayer).pos;
+            
+            // Generate log entry
+            const events = [
+                `Lap ${state.lap}: ${game.name} is P${state.playerPos}`,
+                state.playerPos < state.positions.find(p => p.isPlayer).startPos ? 
+                    `📈 Great overtake! Moved up to P${state.playerPos}` : '',
+                state.tyreWear > 70 ? `⚠️ Tyre wear at ${Math.round(state.tyreWear)}%!` : '',
+                Math.random() < 0.1 ? `💥 Incident in sector 2! Yellow flag` : '',
+                Math.random() < 0.05 ? `🌧️ Rain starting to fall` : ''
+            ].filter(Boolean);
+            
+            state.log.push(...events);
+            
+            // Check finish
+            if (state.lap >= state.totalLaps) {
+                state.phase = 'finished';
+                finishRaceSimulation();
+                return;
+            }
+            
+            updateRaceDisplay();
+        }
+
+        function triggerDecision() {
+            const state = game.raceState;
+            state.decisionPending = true;
+            
+            const scenarios = [
+                {
+                    title: "Tyre Degradation",
+                    text: `Your rear tyres are overheating at ${Math.round(state.tyreWear)}% wear. The driver behind is closing by 0.5s per lap.`,
+                    options: [
+                        { text: "Defend aggressively (Risk puncture/crash)", risk: 0.3, reward: 0 },
+                        { text: "Concede the position and save tyres", risk: 0, reward: -1 },
+                        { text: "Box for unplanned pit stop", risk: 0, reward: -3 }
+                    ]
+                },
+                {
+                    title: "Overtaking Opportunity",
+                    text: "You've caught the car ahead. DRS is available. Gap is 0.3s.",
+                    options: [
+                        { text: "Dive down the inside (High risk)", risk: 0.4, reward: 1 },
+                        { text: "Wait for better opportunity", risk: 0, reward: 0 },
+                        { text: "Try around the outside", risk: 0.2, reward: 1 }
+                    ]
+                },
+                {
+                    title: "Changing Conditions",
+                    text: "Light rain is starting. Track is getting slippery.",
+                    options: [
+                        { text: "Stay out on slicks", risk: 0.3, reward: 0 },
+                        { text: "Box for inters", risk: 0, reward: -2 },
+                        { text: "Back off and assess", risk: 0, reward: -1 }
+                    ]
+                }
+            ];
+            
+            const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+            
+            document.getElementById('decisionTitle').textContent = scenario.title;
+            document.getElementById('decisionText').textContent = scenario.text;
+            
+            const optionsDiv = document.getElementById('decisionOptions');
+            optionsDiv.innerHTML = '';
+            
+            scenario.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-outline';
+                btn.textContent = opt.text;
+                btn.onclick = () => resolveDecision(opt);
+                optionsDiv.appendChild(btn);
+            });
+            
+            updateRaceDisplay();
+        }
+
+        function resolveDecision(option) {
+            const state = game.raceState;
+            state.decisionPending = false;
+            
+            const roll = Math.random();
+            let result = "";
+            
+            if (roll < option.risk) {
+                // Bad outcome
+                const badOutcomes = [
+                    "💥 Contact! You spin and lose positions.",
+                    "⚠️ You lock up and run wide. Positions lost.",
+                    "🔧 Mechanical issue from the stress. Pace dropped."
+                ];
+                result = badOutcomes[Math.floor(Math.random() * badOutcomes.length)];
+                state.positions.find(p => p.isPlayer).lapPerf -= 30;
+            } else if (option.reward > 0) {
+                result = "✅ Perfect execution! You gain a position.";
+                state.positions.find(p => p.isPlayer).lapPerf += 15;
+            } else if (option.reward < 0) {
+                result = "You play it safe but lose some time.";
+            } else {
+                result = "You maintain your position. Solid defense.";
+            }
+            
+            state.log.push(result);
+            updateRaceDisplay();
+        }
+
+        function finishRaceSimulation() {
+            const state = game.raceState;
+            const finalPos = state.playerPos;
+            const points = getPointsForPosition(finalPos);
+            
+            // Update championship
+            const playerEntry = game.championship.find(d => d.isPlayer);
+            playerEntry.points += points;
+            if (finalPos === 1) playerEntry.wins++;
+            
+            // Award SL points if applicable
+            const slPts = getSLPointsForPosition(finalPos, game.tier);
+            if (slPts > 0) {
+                game.slPoints.push({
+                    season: game.season,
+                    round: game.round + 1,
+                    position: finalPos,
+                    points: slPts
+                });
+            }
+            
+            // Skill improvement
+            improveSkills(finalPos);
+            
+            // Money from sponsors/prizes
+            const prizeMoney = Math.max(0, (11 - finalPos) * TIERS[game.tier].cost * 0.05);
+            game.cash += prizeMoney;
+            
+            // Sponsor income
+            game.sponsors.forEach(s => {
+                game.cash += s.value;
+            });
+            
+            // Record history
+            game.history.push({
+                season: game.season,
+                round: game.round + 1,
+                position: finalPos,
+                points: points,
+                track: state.track
+            });
+            
+            game.round++;
+            
+            // Show results
+            document.getElementById('raceSimulation').style.display = 'none';
+            document.getElementById('raceResults').style.display = 'block';
+            
+            const grid = document.getElementById('resultsGrid');
+            grid.innerHTML = `
+                <div class="result-cell">
+                    <div class="result-label">Position</div>
+                    <div class="result-value ${finalPos <= 3 ? 'positive' : ''}">P${finalPos}</div>
+                </div>
+                <div class="result-cell">
+                    <div class="result-label">Points</div>
+                    <div class="result-value positive">+${points}</div>
+                </div>
+                <div class="result-cell">
+                    <div class="result-label">Prize Money</div>
+                    <div class="result-value positive">+$${formatMoney(prizeMoney)}</div>
+                </div>
+                <div class="result-cell">
+                    <div class="result-label">SL Points</div>
+                    <div class="result-value ${slPts > 0 ? 'positive' : ''}">${slPts > 0 ? '+' + slPts : 0}</div>
+                </div>
+            `;
+            
+            // Check if season complete
+            if (game.round >= TIERS[game.tier].rounds) {
+                setTimeout(() => {
+                    showNotification("Season Complete!", "Head to Off-Season to prepare for next year.");
+                }, 1000);
+            }
+            
+            saveGame();
+            updateUI();
+        }
+
+        function finishRace() {
+            if (game.round >= TIERS[game.tier].rounds) {
+                switchTab('offseason');
+                document.querySelectorAll('.nav-tab')[4].classList.add('active');
+                document.querySelectorAll('.nav-tab')[2].classList.remove('active');
+            } else {
+                switchTab('dashboard');
+                document.querySelectorAll('.nav-tab')[0].classList.add('active');
+                document.querySelectorAll('.nav-tab')[2].classList.remove('active');
+            }
+        }
+
+        function improveSkills(position) {
+            const improvements = {
+                pace: position <= 5 ? 1 + Math.random() : Math.random() * 0.5,
+                racecraft: position <= 3 ? 1.5 : 0.5 + Math.random(),
+                consistency: Math.random() * 0.8,
+                tyres: game.tier >= 5 ? (Math.random() * 0.8) : 0,
+                marketability: position === 1 ? 2 : position <= 5 ? 1 : 0.5
+            };
+            
+            for (let stat in improvements) {
+                game.stats[stat] = Math.min(99, game.stats[stat] + improvements[stat]);
+            }
+        }
+
+        // ==================== OFF-SEASON ====================
+        function advanceAge() {
+            game.age++;
+            document.getElementById('offseasonAge').textContent = game.age;
+            showNotification("Age Advanced", `You are now ${game.age} years old.`);
+            
+            // Check age limits
+            const tier = TIERS[game.tier];
+            if (game.age > tier.maxAge) {
+                showNotification("Age Warning", `You are approaching the age limit for ${tier.name}. Consider moving up.`);
+            }
+            
+            saveGame();
+        }
+
+        function manageSponsors() {
+            // Generate sponsor offers based on marketability and results
+            const offers = [];
+            const tier = game.tier;
+            
+            if (game.stats.marketability > 30) {
+                offers.push({ name: "Local Racing Shop", value: 5000 * (tier + 1) });
+            }
+            if (game.stats.marketability > 50) {
+                offers.push({ name: "Energy Drink Brand", value: 15000 * (tier + 1) });
+            }
+            if (game.stats.marketability > 70) {
+                offers.push({ name: "International Sponsor", value: 50000 * (tier + 1) });
+            }
+            if (tier >= 6 && game.stats.marketability > 60) {
+                offers.push({ name: "Tech Corporation", value: 100000 });
+            }
+            
+            let html = '<div style="margin-bottom: 20px;">';
+            if (offers.length === 0) {
+                html += '<p style="color: var(--text-secondary);">No sponsor offers available. Improve your marketability to attract backers.</p>';
+            } else {
+                offers.forEach(offer => {
+                    html += `
+                        <div class="sponsor-card" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="sponsor-name">${offer.name}</div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">Season payment</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div class="sponsor-value">+$${formatMoney(offer.value)}</div>
+                                <button class="btn btn-success" onclick="signSponsor('${offer.name}', ${offer.value})">Sign</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            html += '</div>';
+            
+            if (game.sponsors.length > 0) {
+                html += '<div style="margin-top: 20px;"><h3 style="margin-bottom: 10px;">Current Sponsors</h3>';
+                game.sponsors.forEach((s, idx) => {
+                    html += `
+                        <div class="sponsor-card" style="margin-bottom: 10px;">
+                            <div class="sponsor-name">${s.name}</div>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div class="sponsor-value">+$${formatMoney(s.value)}</div>
+                                <button class="btn btn-danger" onclick="dropSponsor(${idx})">Drop</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            showModal("Sponsor Negotiations", html);
+        }
+
+        function signSponsor(name, value) {
+            if (game.sponsors.length >= 3) {
+                showNotification("Maximum Sponsors", "You can only have 3 sponsors. Drop one first.");
+                return;
+            }
+            game.sponsors.push({ name, value });
+            saveGame();
+            closeModal();
+            updateUI();
+            showNotification("Sponsor Signed", `${name} is now backing your career!`);
+        }
+
+        function dropSponsor(idx) {
+            game.sponsors.splice(idx, 1);
+            saveGame();
+            closeModal();
+            updateUI();
+            manageSponsors(); // Refresh
+        }
+
+        function checkAcademy() {
+            if (game.tier < 3) {
+                showModal("Academy Offers", "<p style='color: var(--text-secondary);'>F1 Junior Academies only scout drivers from Tier 4 and above. Keep climbing the ladder!</p>");
+                return;
+            }
+            
+            const eligible = ACADEMIES.filter(a => {
+                return game.tier >= a.minTier - 1 && 
+                       game.stats.pace >= a.minPace && 
+                       game.stats.marketability >= a.minMarket;
+            });
+            
+            let html = '';
+            if (eligible.length === 0) {
+                html = '<p style="color: var(--text-secondary);">No academy offers yet. Improve your pace and marketability to get noticed.</p>';
+            } else {
+                eligible.forEach(academy => {
+                    const isCurrent = game.academy === academy.name;
+                    html += `
+                        <div class="card" style="margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 700; font-size: 1.1rem; color: var(--accent-f1);">${academy.name}</div>
+                                    <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 5px;">
+                                        Min Pace: ${academy.minPace} | Min Marketability: ${academy.minMarket}
+                                    </div>
+                                </div>
+                                ${isCurrent ? 
+                                    '<span style="color: var(--accent-money); font-weight: 700;">✓ Member</span>' : 
+                                    `<button class="btn btn-primary" onclick="joinAcademy('${academy.name}')">Join</button>`
+                                }
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            showModal("F1 Junior Academy Offers", html);
+        }
+
+        function joinAcademy(name) {
+            game.academy = name;
+            // Academy provides stipend
+            const stipend = 25000 * (game.tier + 1);
+            game.cash += stipend;
+            saveGame();
+            closeModal();
+            updateUI();
+            showNotification("Academy Joined", `Welcome to ${name}! Received $${formatMoney(stipend)} stipend.`);
+        }
+
+        function startNewSeason() {
+            // Check if can advance tier
+            const currentTier = TIERS[game.tier];
+            const slTotal = calculateSLPoints();
+            
+            // Auto-promote if champion or high finish
+            const playerChamp = game.championship.find(d => d.isPlayer);
+            const champPos = [...game.championship].sort((a, b) => b.points - a.points).findIndex(d => d.isPlayer) + 1;
+            
+            let canPromote = false;
+            if (game.tier < 8) {
+                const nextTier = TIERS[game.tier + 1];
+                canPromote = game.age >= nextTier.minAge && (champPos <= 3 || (game.tier >= 5 && slTotal >= 20));
+            }
+            
+            let html = `
+                <div style="margin-bottom: 20px;">
+                    <div class="season-end-banner">
+                        <h2>Season ${game.season} Complete!</h2>
+                        <p style="color: var(--text-secondary); margin-top: 10px;">Championship Position: P${champPos}</p>
+                        <p style="font-size: 1.5rem; color: var(--accent-f1); margin-top: 10px;">${playerChamp.points} Points | ${playerChamp.wins} Wins</p>
+                    </div>
+                </div>
+            `;
+            
+            if (canPromote) {
+                html += `
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <p style="color: var(--accent-money); font-size: 1.1rem; margin-bottom: 15px;">
+                            🎉 You are eligible to advance to ${TIERS[game.tier + 1].name}!
+                        </p>
+                        <button class="btn btn-success" style="font-size: 1.1rem; padding: 12px 30px;" onclick="promoteTier()">
+                            Advance to Next Tier
+                        </button>
+                    </div>
+                `;
+            } else if (game.tier < 8) {
+                html += `
+                    <div style="text-align: center; margin-bottom: 20px; color: var(--text-secondary);">
+                        <p>Continue in ${currentTier.name} for another season.</p>
+                        <p style="font-size: 0.9rem; margin-top: 5px;">Finish P3 or higher to advance (or meet SL requirements for higher tiers).</p>
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div style="text-align: center;">
+                    <button class="btn btn-primary" style="padding: 12px 30px;" onclick="startNextSeasonSameTier()">
+                        Start Season ${game.season + 1}
+                    </button>
+                </div>
+            `;
+            
+            showModal("Season Complete", html);
+        }
+
+        function promoteTier() {
+            game.tier++;
+            game.round = 0;
+            game.season++;
+            initChampionship();
+            saveGame();
+            closeModal();
+            updateUI();
+            showNotification("Tier Advanced!", `Welcome to ${TIERS[game.tier].name}!`);
+        }
+
+        function startNextSeasonSameTier() {
+            game.round = 0;
+            game.season++;
+            initChampionship();
+            saveGame();
+            closeModal();
+            updateUI();
+            showNotification("New Season", `Season ${game.season} begins! Good luck.`);
+        }
+
+        // ==================== UTILITIES ====================
+        function showNotification(title, text) {
+            const notif = document.getElementById('notification');
+            document.getElementById('notifTitle').textContent = title;
+            document.getElementById('notifText').textContent = text;
+            notif.classList.add('show');
+            
+            setTimeout(() => {
+                notif.classList.remove('show');
+            }, 4000);
+        }
+
+        function showModal(title, html) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalText').innerHTML = html;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function getOrdinal(n) {
+            const s = ["th", "st", "nd", "rd"];
+            const v = n % 100;
+            return s[(v - 20) % 10] || s[v] || s[0];
+        }
+
+        // Close modal on overlay click
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal')) closeModal();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>
