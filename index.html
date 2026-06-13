@@ -1282,13 +1282,226 @@
             "Paul Ricard", "Nurburgring", "Hockenheim", "Fuji", "Sepang"
         ];
 
-        const AI_NAMES = [
-            "Max Verstappen", "Lewis Hamilton", "Charles Leclerc", "Lando Norris",
-            "George Russell", "Oscar Piastri", "Carlos Sainz", "Fernando Alonso",
-            "Sergio Perez", "Valtteri Bottas", "Esteban Ocon", "Pierre Gasly",
-            "Alex Albon", "Logan Sargeant", "Nico Hulkenberg", "Kevin Magnussen",
-            "Daniel Ricciardo", "Yuki Tsunoda", "Liam Lawson", "Oliver Bearman"
+        const AI_FIRST_NAMES = [
+            "Max", "Lewis", "Charles", "Lando", "George", "Oscar", "Carlos", "Fernando",
+            "Sergio", "Valtteri", "Esteban", "Pierre", "Alex", "Logan", "Nico", "Kevin",
+            "Daniel", "Yuki", "Liam", "Oliver", "Franco", "Lance", "Zhou", "Nyck",
+            "Mick", "Antonio", "Nicholas", "Robert", "Guanyu", "Jack", "Theo", "Paul"
         ];
+
+        const AI_LAST_NAMES = [
+            "Verstappen", "Hamilton", "Leclerc", "Norris", "Russell", "Piastri", "Sainz", "Alonso",
+            "Perez", "Bottas", "Ocon", "Gasly", "Albon", "Sargeant", "Hulkenberg", "Magnussen",
+            "Ricciardo", "Tsunoda", "Lawson", "Bearman", "Colapinto", "Stroll", "Zhou", "De Vries",
+            "Schumacher", "Giovinazzi", "Latifi", "Kubica", "Guanyu", "Doohan", "Pourchaire", "Aron"
+        ];
+
+        // Driver pools per tier (20-30 drivers each)
+        const DRIVER_POOLS = {
+            0: [ // Tier 1 - Cadets (8-10 years)
+                { name: "Tommy Swift", basePace: 35, consistency: 30, age: 8 },
+                { name: "Jake Thunder", basePace: 38, consistency: 32, age: 9 },
+                { name: "Leo Speed", basePace: 32, consistency: 35, age: 8 },
+                { name: "Sam Rocket", basePace: 40, consistency: 28, age: 10 },
+                { name: "Ben Storm", basePace: 36, consistency: 33, age: 9 },
+                { name: "Max Lightning", basePace: 42, consistency: 30, age: 10 },
+                { name: "Charlie Blaze", basePace: 34, consistency: 36, age: 8 },
+                { name: "Ollie Flash", basePace: 39, consistency: 31, age: 9 },
+                { name: "Harry Turbo", basePace: 37, consistency: 34, age: 10 },
+                { name: "George Nitro", basePace: 41, consistency: 29, age: 9 },
+                { name: "Freddie Bolt", basePace: 33, consistency: 37, age: 8 },
+                { name: "Archie Spark", basePace: 38, consistency: 32, age: 10 },
+                { name: "Noah Flame", basePace: 35, consistency: 35, age: 9 },
+                { name: "Lucas Dash", basePace: 40, consistency: 30, age: 10 },
+                { name: "Mason Zoom", basePace: 36, consistency: 33, age: 8 },
+                { name: "Ethan Race", basePace: 39, consistency: 31, age: 9 },
+                { name: "Alexander Pro", basePace: 43, consistency: 28, age: 10 },
+                { name: "William Ace", basePace: 34, consistency: 36, age: 9 },
+                { name: "James King", basePace: 37, consistency: 34, age: 8 },
+                { name: "Henry Champ", basePace: 41, consistency: 30, age: 10 }
+            ],
+            1: [ // Tier 2 - Juniors (9-12 years)
+                { name: "Ryan Velocity", basePace: 40, consistency: 35, age: 10 },
+                { name: "Connor Speed", basePace: 43, consistency: 37, age: 11 },
+                { name: "Dylan Rocket", basePace: 38, consistency: 40, age: 10 },
+                { name: "Jayden Turbo", basePace: 45, consistency: 33, age: 12 },
+                { name: "Tyler Blast", basePace: 41, consistency: 38, age: 11 },
+                { name: "Brandon Flash", basePace: 44, consistency: 35, age: 12 },
+                { name: "Nathan Storm", basePace: 39, consistency: 41, age: 10 },
+                { name: "Aaron Lightning", basePace: 46, consistency: 32, age: 12 },
+                { name: "Christian Blaze", basePace: 42, consistency: 36, age: 11 },
+                { name: "Isaac Nitro", basePace: 47, consistency: 31, age: 12 },
+                { name: "Gabriel Bolt", basePace: 40, consistency: 39, age: 10 },
+                { name: "Caleb Spark", basePace: 43, consistency: 37, age: 11 },
+                { name: "Joshua Flame", basePace: 38, consistency: 42, age: 10 },
+                { name: "Matthew Dash", basePace: 45, consistency: 34, age: 12 },
+                { name: "Andrew Zoom", basePace: 41, consistency: 38, age: 11 },
+                { name: "Joseph Race", basePace: 44, consistency: 35, age: 12 },
+                { name: "David Pro", basePace: 48, consistency: 30, age: 12 },
+                { name: "Samuel Ace", basePace: 39, consistency: 40, age: 10 },
+                { name: "Luke King", basePace: 42, consistency: 36, age: 11 },
+                { name: "Jack Champ", basePace: 46, consistency: 33, age: 12 }
+            ],
+            2: [ // Tier 3 - Senior Karting (11-14 years)
+                { name: "Alex Power", basePace: 50, consistency: 45, age: 12 },
+                { name: "Jordan Force", basePace: 53, consistency: 47, age: 13 },
+                { name: "Casey Thunder", basePace: 48, consistency: 50, age: 12 },
+                { name: "Taylor Storm", basePace: 55, consistency: 43, age: 14 },
+                { name: "Morgan Blaze", basePace: 51, consistency: 48, age: 13 },
+                { name: "Riley Flash", basePace: 54, consistency: 45, age: 14 },
+                { name: "Quinn Rocket", basePace: 49, consistency: 51, age: 12 },
+                { name: "Avery Nitro", basePace: 56, consistency: 42, age: 14 },
+                { name: "Cameron Bolt", basePace: 52, consistency: 46, age: 13 },
+                { name: "Peyton Spark", basePace: 57, consistency: 41, age: 14 },
+                { name: "Dakota Flame", basePace: 50, consistency: 49, age: 12 },
+                { name: "Skyler Dash", basePace: 53, consistency: 47, age: 13 },
+                { name: "Reese Zoom", basePace: 48, consistency: 52, age: 12 },
+                { name: "Emerson Race", basePace: 55, consistency: 44, age: 14 },
+                { name: "Finley Pro", basePace: 51, consistency: 48, age: 13 },
+                { name: "Hayden Ace", basePace: 54, consistency: 45, age: 14 },
+                { name: "Parker King", basePace: 58, consistency: 40, age: 14 },
+                { name: "Rowan Champ", basePace: 49, consistency: 50, age: 12 },
+                { name: "Sawyer Speed", basePace: 52, consistency: 46, age: 13 },
+                { name: "Phoenix Turbo", basePace: 56, consistency: 43, age: 14 }
+            ],
+            3: [ // Tier 4 - Formula 4 / Ginetta (14-17 years)
+                { name: "Sebastian Vettel Jr", basePace: 60, consistency: 55, age: 15 },
+                { name: "Michael Schumi III", basePace: 63, consistency: 57, age: 16 },
+                { name: "Alonso Fernandez", basePace: 58, consistency: 60, age: 15 },
+                { name: "Kimi Raikko Jr", basePace: 65, consistency: 53, age: 17 },
+                { name: "Jenson Button II", basePace: 61, consistency: 58, age: 16 },
+                { name: "Nico Rosberg Jr", basePace: 64, consistency: 55, age: 17 },
+                { name: "Felipe Massa Jr", basePace: 59, consistency: 61, age: 15 },
+                { name: "Mark Webber Jr", basePace: 66, consistency: 52, age: 17 },
+                { name: "Rubens Barrichello Jr", basePace: 62, consistency: 56, age: 16 },
+                { name: "Giancarlo Fisico Jr", basePace: 67, consistency: 51, age: 17 },
+                { name: "Heikki Kovalainen Jr", basePace: 60, consistency: 59, age: 15 },
+                { name: "Robert Kubica Jr", basePace: 63, consistency: 57, age: 16 },
+                { name: "Nick Heidfeld Jr", basePace: 58, consistency: 62, age: 15 },
+                { name: "Adrian Sutil Jr", basePace: 65, consistency: 54, age: 17 },
+                { name: "Timo Glock Jr", basePace: 61, consistency: 58, age: 16 },
+                { name: "Sebastien Buemi Jr", basePace: 64, consistency: 55, age: 17 },
+                { name: "Jaime Alguersuari Jr", basePace: 68, consistency: 50, age: 17 },
+                { name: "Pastor Maldonado Jr", basePace: 59, consistency: 60, age: 15 },
+                { name: "Romain Grosjean Jr", basePace: 62, consistency: 56, age: 16 },
+                { name: "Daniil Kvyat Jr", basePace: 66, consistency: 53, age: 17 }
+            ],
+            4: [ // Tier 5 - F4 Championship (15-18 years)
+                { name: "Theo Pourchaire II", basePace: 65, consistency: 60, age: 16 },
+                { name: "Frederik Rasmussen", basePace: 68, consistency: 62, age: 17 },
+                { name: "Gabriel Bortoleto Jr", basePace: 63, consistency: 65, age: 16 },
+                { name: "Caio Collet II", basePace: 70, consistency: 58, age: 18 },
+                { name: "Victor Martins Jr", basePace: 66, consistency: 63, age: 17 },
+                { name: "Roman Stanek Jr", basePace: 69, consistency: 60, age: 18 },
+                { name: "Jonny Edgar II", basePace: 64, consistency: 66, age: 16 },
+                { name: "Jak Crawford Jr", basePace: 71, consistency: 57, age: 18 },
+                { name: "Zane Maloney Jr", basePace: 67, consistency: 61, age: 17 },
+                { name: "Franco Colapinto II", basePace: 72, consistency: 56, age: 18 },
+                { name: "Ayumu Iwasa Jr", basePace: 65, consistency: 64, age: 16 },
+                { name: "Dennis Hauger Jr", basePace: 68, consistency: 62, age: 17 },
+                { name: "Clement Novalak Jr", basePace: 63, consistency: 67, age: 16 },
+                { name: "Liam Lawson II", basePace: 70, consistency: 59, age: 18 },
+                { name: "Oscar Piastri Jr", basePace: 66, consistency: 63, age: 17 },
+                { name: "Théo Pourchaire III", basePace: 69, consistency: 60, age: 18 },
+                { name: "Logan Sargeant Jr", basePace: 73, consistency: 55, age: 18 },
+                { name: "Richard Verschoor Jr", basePace: 64, consistency: 65, age: 16 },
+                { name: "Jehan Daruvala Jr", basePace: 67, consistency: 61, age: 17 },
+                { name: "Marcus Armstrong Jr", basePace: 71, consistency: 58, age: 18 }
+            ],
+            5: [ // Tier 6 - FREC/GB3 (16-19 years)
+                { name: "Andrea Kimi Antonelli", basePace: 70, consistency: 65, age: 17 },
+                { name: "Paul Aron II", basePace: 73, consistency: 67, age: 18 },
+                { name: "Dino Beganovic Jr", basePace: 68, consistency: 70, age: 17 },
+                { name: "Sebastiano Montoya", basePace: 75, consistency: 63, age: 19 },
+                { name: "Rafael Camara Jr", basePace: 71, consistency: 68, age: 18 },
+                { name: "Tuukka Taponen", basePace: 74, consistency: 65, age: 19 },
+                { name: "James Wharton Jr", basePace: 69, consistency: 71, age: 17 },
+                { name: "Arvid Lindblad", basePace: 76, consistency: 62, age: 19 },
+                { name: "Christian Ho", basePace: 72, consistency: 66, age: 18 },
+                { name: "Nikola Tsolov", basePace: 77, consistency: 61, age: 19 },
+                { name: "Alessandro Giusti", basePace: 70, consistency: 69, age: 17 },
+                { name: "Emilio de Felipe", basePace: 73, consistency: 67, age: 18 },
+                { name: "Charlie Wurz", basePace: 68, consistency: 72, age: 17 },
+                { name: "Max Esterson", basePace: 75, consistency: 64, age: 19 },
+                { name: "Enzo Trulli", basePace: 71, consistency: 68, age: 18 },
+                { name: "Leonardo Fornaroli", basePace: 74, consistency: 65, age: 19 },
+                { name: "Conrad Laursen", basePace: 78, consistency: 60, age: 19 },
+                { name: "Kacper Sztuka", basePace: 69, consistency: 70, age: 17 },
+                { name: "Joshua Dufek", basePace: 72, consistency: 66, age: 18 },
+                { name: "Bart Horsten", basePace: 76, consistency: 63, age: 19 }
+            ],
+            6: [ // Tier 7 - F3 (17-21 years)
+                { name: "Gabriele Mini", basePace: 75, consistency: 70, age: 18 },
+                { name: "Martinius Stenshorne", basePace: 78, consistency: 72, age: 19 },
+                { name: "Sami Meguetounif", basePace: 73, consistency: 75, age: 18 },
+                { name: "Christian Mansell", basePace: 80, consistency: 68, age: 20 },
+                { name: "Oliver Goethe", basePace: 76, consistency: 73, age: 19 },
+                { name: "Taylor Barnard", basePace: 79, consistency: 70, age: 20 },
+                { name: "Mari Boya", basePace: 74, consistency: 76, age: 18 },
+                { name: "Sebastian Montoya", basePace: 81, consistency: 67, age: 20 },
+                { name: "Pepe Marti", basePace: 77, consistency: 71, age: 19 },
+                { name: "Tim Tramnitz", basePace: 82, consistency: 66, age: 21 },
+                { name: "Leonardo Mainardi", basePace: 75, consistency: 74, age: 18 },
+                { name: "Ethan Ischer", basePace: 78, consistency: 72, age: 19 },
+                { name: "Callum Voisin", basePace: 73, consistency: 77, age: 18 },
+                { name: "Aiden Neate", basePace: 80, consistency: 69, age: 20 },
+                { name: "Joel Granfors", basePace: 76, consistency: 73, age: 19 },
+                { name: "McKenzy Cresswell", basePace: 79, consistency: 70, age: 20 },
+                { name: "Tommy Smith Jr", basePace: 83, consistency: 65, age: 21 },
+                { name: "Laurens Van Hoepen", basePace: 74, consistency: 75, age: 18 },
+                { name: "Alexander Dunlop", basePace: 77, consistency: 71, age: 19 },
+                { name: "Filip Ugran", basePace: 81, consistency: 68, age: 20 }
+            ],
+            7: [ // Tier 8 - F2 (18-24 years)
+                { name: "Isack Hadjar", basePace: 80, consistency: 75, age: 19 },
+                { name: "Gabriel Bortoleto", basePace: 83, consistency: 77, age: 20 },
+                { name: "Zane Maloney", basePace: 78, consistency: 80, age: 19 },
+                { name: "Victor Martins", basePace: 85, consistency: 73, age: 21 },
+                { name: "Theo Pourchaire", basePace: 81, consistency: 78, age: 20 },
+                { name: "Arthur Leclerc", basePace: 84, consistency: 75, age: 21 },
+                { name: "Jak Crawford", basePace: 79, consistency: 81, age: 19 },
+                { name: "Ayumu Iwasa", basePace: 86, consistency: 72, age: 22 },
+                { name: "Dennis Hauger", basePace: 82, consistency: 76, age: 20 },
+                { name: "Richard Verschoor", basePace: 87, consistency: 71, age: 22 },
+                { name: "Jehan Daruvala", basePace: 80, consistency: 79, age: 19 },
+                { name: "Marcus Armstrong", basePace: 83, consistency: 77, age: 20 },
+                { name: "Clement Novalak", basePace: 78, consistency: 82, age: 19 },
+                { name: "Amaury Cordeel", basePace: 85, consistency: 74, age: 21 },
+                { name: "Roy Nissany", basePace: 81, consistency: 78, age: 20 },
+                { name: "Calan Williams", basePace: 84, consistency: 75, age: 21 },
+                { name: "Jack Doohan", basePace: 88, consistency: 70, age: 22 },
+                { name: "Lirim Zendeli", basePace: 79, consistency: 80, age: 19 },
+                { name: "David Beckmann", basePace: 82, consistency: 76, age: 20 },
+                { name: "Marino Sato", basePace: 86, consistency: 73, age: 21 }
+            ],
+            8: [ // Tier 9 - F1 (20-35 years)
+                { name: "Max Verstappen", basePace: 95, consistency: 90, age: 26 },
+                { name: "Lewis Hamilton", basePace: 94, consistency: 92, age: 39 },
+                { name: "Charles Leclerc", basePace: 93, consistency: 88, age: 26 },
+                { name: "Lando Norris", basePace: 92, consistency: 89, age: 24 },
+                { name: "George Russell", basePace: 91, consistency: 87, age: 26 },
+                { name: "Oscar Piastri", basePace: 90, consistency: 86, age: 23 },
+                { name: "Carlos Sainz", basePace: 92, consistency: 88, age: 29 },
+                { name: "Fernando Alonso", basePace: 91, consistency: 91, age: 42 },
+                { name: "Sergio Perez", basePace: 89, consistency: 85, age: 34 },
+                { name: "Valtteri Bottas", basePace: 88, consistency: 87, age: 34 },
+                { name: "Esteban Ocon", basePace: 87, consistency: 84, age: 27 },
+                { name: "Pierre Gasly", basePace: 88, consistency: 85, age: 28 },
+                { name: "Alex Albon", basePace: 89, consistency: 86, age: 28 },
+                { name: "Franco Colapinto", basePace: 86, consistency: 83, age: 21 },
+                { name: "Nico Hulkenberg", basePace: 87, consistency: 86, age: 36 },
+                { name: "Kevin Magnussen", basePace: 86, consistency: 84, age: 31 },
+                { name: "Daniel Ricciardo", basePace: 88, consistency: 85, age: 34 },
+                { name: "Yuki Tsunoda", basePace: 87, consistency: 83, age: 24 },
+                { name: "Liam Lawson", basePace: 88, consistency: 84, age: 22 },
+                { name: "Oliver Bearman", basePace: 85, consistency: 82, age: 20 },
+                { name: "Lance Stroll", basePace: 84, consistency: 83, age: 25 },
+                { name: "Zhou Guanyu", basePace: 85, consistency: 84, age: 25 },
+                { name: "Nyck De Vries", basePace: 86, consistency: 82, age: 29 },
+                { name: "Mick Schumacher", basePace: 87, consistency: 83, age: 25 },
+                { name: "Antonio Giovinazzi", basePace: 85, consistency: 84, age: 30 }
+            ]
+        };
 
         // ==================== GAME STATE ====================
         let game = {
@@ -1582,11 +1795,11 @@
             if (tab === 'race') initRacePrep();
         }
 
-        // ==================== CHAMPIONSHIP SYSTEM ====================
+// ==================== CHAMPIONSHIP SYSTEM ====================
         function initChampionship() {
             game.championship = [];
             const tier = TIERS[game.tier];
-            
+
             // Add player
             game.championship.push({
                 name: game.name,
@@ -1595,20 +1808,43 @@
                 wins: 0,
                 isPlayer: true
             });
+
+            // Get AI drivers from pool for this tier
+            const driverPool = DRIVER_POOLS[game.tier] || [];
+            const aiCount = Math.min(19, Math.max(8 + game.tier * 2, driverPool.length));
             
-            // Add AI drivers
-            const aiCount = Math.min(19, 8 + game.tier * 2);
-            for (let i = 0; i < aiCount; i++) {
+            // Shuffle and pick drivers from pool
+            const shuffledPool = [...driverPool].sort(() => Math.random() - 0.5);
+            
+            for (let i = 0; i < aiCount && i < shuffledPool.length; i++) {
+                const driverData = shuffledPool[i];
                 const teamIdx = Math.min(Math.floor(Math.random() * TEAMS[game.tier].length), TEAMS[game.tier].length - 1);
-                const aiName = AI_NAMES[i % AI_NAMES.length] + (i >= AI_NAMES.length ? ` ${Math.floor(i/AI_NAMES.length) + 1}` : '');
                 game.championship.push({
-                    name: aiName,
+                    name: driverData.name,
                     team: TEAMS[game.tier][teamIdx].name,
                     points: 0,
                     wins: 0,
                     isPlayer: false,
-                    basePace: 40 + Math.random() * 40,
-                    consistency: 30 + Math.random() * 50
+                    basePace: driverData.basePace,
+                    consistency: driverData.consistency,
+                    age: driverData.age
+                });
+            }
+            
+            // If we still need more drivers, generate generic ones
+            while (game.championship.length < aiCount + 1) {
+                const firstName = AI_FIRST_NAMES[Math.floor(Math.random() * AI_FIRST_NAMES.length)];
+                const lastName = AI_LAST_NAMES[Math.floor(Math.random() * AI_LAST_NAMES.length)];
+                const teamIdx = Math.min(Math.floor(Math.random() * TEAMS[game.tier].length), TEAMS[game.tier].length - 1);
+                game.championship.push({
+                    name: `${firstName} ${lastName}`,
+                    team: TEAMS[game.tier][teamIdx].name,
+                    points: 0,
+                    wins: 0,
+                    isPlayer: false,
+                    basePace: 40 + game.tier * 5 + Math.random() * 30,
+                    consistency: 30 + game.tier * 4 + Math.random() * 40,
+                    age: TIERS[game.tier].minAge + Math.floor(Math.random() * (TIERS[game.tier].maxAge - TIERS[game.tier].minAge))
                 });
             }
         }
